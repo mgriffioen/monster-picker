@@ -27,7 +27,13 @@
   <main class="layout">
     <!-- Controls ------------------------------------------------------->
     <aside class="controls panel">
-      <h2 class="panel-title">Ritual Parameters</h2>
+      <div class="field search-field">
+        <label for="searchInput">Find a monster by name</label>
+        <input type="search" id="searchInput" placeholder="Search 373 monsters…" autocomplete="off" spellcheck="false">
+        <div id="searchResults" class="search-results" hidden></div>
+      </div>
+
+      <h2 class="panel-title panel-title--sub">Ritual Parameters</h2>
 
       <div class="field">
         <label for="level">Party level <output id="levelOut">5</output></label>
