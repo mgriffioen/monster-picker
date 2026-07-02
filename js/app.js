@@ -1,4 +1,4 @@
-import { loadData, meta, filterMonsters } from "./data.js";
+import { loadData, meta, filterMonsters, allMonsters, getBySlug } from "./data.js";
 import { monsterPortrait } from "./portrait.js";
 import { renderStatBlock } from "./statblock.js";
 import { soloDifficulty, suggestedCount, adjustedXp, partyThresholds } from "./encounter.js";
@@ -6,7 +6,9 @@ import { soloDifficulty, suggestedCount, adjustedXp, partyThresholds } from "./e
 const $ = (sel) => document.querySelector(sel);
 const el = (id) => document.getElementById(id);
 
-const STORE_KEY = "monster-picker:v1";
+// Bumped to v2 so the new "try real artwork on by default" preference takes
+// effect for people who previously had it saved as off.
+const STORE_KEY = "monster-picker:v2";
 const ART_BASE = "https://www.dnd5eapi.co/api/images/monsters/"; // {slug}.png
 
 const state = {
@@ -18,7 +20,7 @@ const state = {
   sizes: new Set(),
   crMin: 0,
   crMax: 30,
-  tryArt: false,
+  tryArt: true,
   current: null,
   spinning: false,
 };
@@ -117,6 +119,21 @@ function bindEvents() {
     if (state.current) upgradeArt(state.current);
   });
 
+  el("searchInput").addEventListener("input", (e) => runSearch(e.target.value));
+  el("searchInput").addEventListener("keydown", (e) => {
+    if (e.key === "Escape") { e.target.value = ""; runSearch(""); }
+  });
+  el("searchResults").addEventListener("click", (e) => {
+    const item = e.target.closest(".search-item");
+    if (!item) return;
+    const m = getBySlug(item.dataset.slug);
+    if (!m) return;
+    el("searchResults").hidden = true;
+    el("stage").classList.remove("is-idle");
+    el("stage").classList.add("is-revealed");
+    land(m);
+  });
+
   el("summonBtn").addEventListener("click", summon);
   el("resummonBtn").addEventListener("click", summon);
   el("summonBarBtn").addEventListener("click", () => {
@@ -158,6 +175,30 @@ function resetFilters() {
   });
   buildControls();
   onParamChange();
+}
+
+// --------------------------------------------------------------------------
+// Search (find any monster by name, independent of the summon filters)
+// --------------------------------------------------------------------------
+function runSearch(query) {
+  const box = el("searchResults");
+  const q = query.trim().toLowerCase();
+  if (!q) { box.hidden = true; box.innerHTML = ""; return; }
+  const hits = allMonsters()
+    .filter((m) => m.name.toLowerCase().includes(q))
+    .sort((a, b) => (a.name.toLowerCase().indexOf(q) - b.name.toLowerCase().indexOf(q))
+      || a.name.localeCompare(b.name))
+    .slice(0, 12);
+  if (!hits.length) {
+    box.innerHTML = `<div class="search-empty">No monster matches “${escapeHtml(query.trim())}”.</div>`;
+  } else {
+    box.innerHTML = hits.map((m) => `
+      <button type="button" class="search-item" data-slug="${m.slug}">
+        <span class="search-item-name">${escapeHtml(m.name)}</span>
+        <span class="search-item-cr">CR ${m.crDisplay}</span>
+      </button>`).join("");
+  }
+  box.hidden = false;
 }
 
 // --------------------------------------------------------------------------
@@ -328,7 +369,7 @@ function openLightbox(m) {
     : monsterPortrait(m, { size: 900 });
   el("lightboxName").textContent = m.name;
   el("lightboxMeta").textContent =
-    `${m.size} ${m.type} · CR ${m.crDisplay} · ${m.xp.toLocaleString()} XP`;
+    `${m.size} ${m.type}${m.isSwarm ? " swarm" : ""}${m.alignment ? " · " + m.alignment : ""}`;
   box.hidden = false;
   document.body.style.overflow = "hidden";
 }
