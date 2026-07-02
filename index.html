@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Summoning Circle · D&D 5e Monster Picker</title>
+  <meta name="description" content="Pick a fitting D&D 5e monster for your party by level, difficulty, environment, type and size — with full SRD stat blocks.">
+  <link rel="stylesheet" href="./css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%AE%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+  <div class="stars" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-glyph" aria-hidden="true">🔮</span>
+      <div>
+        <h1>The Summoning Circle</h1>
+        <p class="tagline">Conjure the right foe · D&amp;D 5e SRD monster picker</p>
+      </div>
+    </div>
+    <div class="match-readout">
+      <span id="matchCount">0</span> monsters match
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- Controls ------------------------------------------------------->
+    <aside class="controls panel">
+      <h2 class="panel-title">Ritual Parameters</h2>
+
+      <div class="field">
+        <label for="level">Party level <output id="levelOut">5</output></label>
+        <input type="range" id="level" min="1" max="20" step="1" value="5">
+      </div>
+
+      <div class="field">
+        <label for="partySize">Party size <output id="partySizeOut">4</output></label>
+        <input type="range" id="partySize" min="1" max="8" step="1" value="4">
+      </div>
+
+      <div class="field">
+        <label for="difficulty">Encounter difficulty</label>
+        <select id="difficulty"></select>
+        <p class="hint">Matches monsters that read as this difficulty solo for your party.</p>
+      </div>
+
+      <div class="field">
+        <label for="environment">Environment</label>
+        <select id="environment"></select>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Creature type</span>
+        <div id="typeChips" class="chips"></div>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Size</span>
+        <div id="sizeChips" class="chips"></div>
+      </div>
+
+      <div class="field field--row">
+        <div>
+          <label for="crMin">CR min</label>
+          <select id="crMin"></select>
+        </div>
+        <div>
+          <label for="crMax">CR max</label>
+          <select id="crMax"></select>
+        </div>
+      </div>
+
+      <label class="toggle">
+        <input type="checkbox" id="artToggle">
+        <span>Try real artwork when online</span>
+      </label>
+      <p class="hint">Off by default. When on, attempts to fetch official-style art from a public API; falls back to the generated sigil.</p>
+
+      <button id="resetBtn" class="btn btn--ghost btn--small">Reset filters</button>
+    </aside>
+
+    <!-- Stage ---------------------------------------------------------->
+    <section class="stage-wrap">
+      <div id="stage" class="stage is-idle">
+        <div class="rune-ring ring-outer" aria-hidden="true"></div>
+        <div class="rune-ring ring-mid" aria-hidden="true"></div>
+        <div class="rune-ring ring-inner" aria-hidden="true"></div>
+        <div class="stage-core">
+          <div id="portraitHost" class="portrait-host" role="button" tabindex="0"
+               aria-label="Summoned monster portrait — click to view full screen"></div>
+        </div>
+        <p id="stageLabel" class="stage-label"></p>
+      </div>
+
+      <div class="summon-actions">
+        <button id="summonBtn" class="btn btn--primary">✦ Summon a monster</button>
+        <button id="resummonBtn" class="btn btn--ghost">Re-summon</button>
+        <button id="browseBtn" class="btn btn--ghost">Browse matches</button>
+      </div>
+      <p id="noMatch" class="no-match" hidden>No monsters match these parameters — loosen a filter.</p>
+
+      <!-- Browse grid -->
+      <section id="browsePanel" class="panel browse-panel" hidden>
+        <h2 class="panel-title">Matching monsters</h2>
+        <div id="browseGrid" class="browse-grid"></div>
+      </section>
+
+      <!-- Result -->
+      <section id="resultPanel" class="panel result" hidden>
+        <div class="result-head">
+          <div>
+            <h2 id="resultName" class="result-name"></h2>
+            <p id="resultSub" class="result-sub"></p>
+          </div>
+          <span id="difficultyBadge" class="badge"></span>
+        </div>
+
+        <div class="result-tags">
+          <span id="crChip" class="tag tag--strong"></span>
+          <span id="xpChip" class="tag tag--strong"></span>
+          <span id="envChips" class="env-chips"></span>
+          <span id="artBadge" class="tag tag--art" hidden>Real artwork</span>
+        </div>
+
+        <p id="countHint" class="count-hint"></p>
+
+        <div class="result-actions">
+          <button id="copyBtn" class="btn btn--ghost btn--small">Copy stat block</button>
+        </div>
+
+        <div id="statblockHost"></div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="site-foot">
+    <p>Monster data from the <strong>D&amp;D 5e SRD 5.1</strong> via the
+      <a href="https://pypi.org/project/dungeonsheets/" target="_blank" rel="noopener">dungeonsheets</a>
+      package, used under
+      <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC-BY-4.0</a>.
+      Environment tags are heuristic. Generated sigils are original art.</p>
+  </footer>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox" hidden>
+    <button id="lightboxClose" class="lightbox-close" aria-label="Close">✕</button>
+    <figure class="lightbox-fig">
+      <div id="lightboxArt" class="lightbox-art"></div>
+      <figcaption>
+        <span id="lightboxName" class="lightbox-name"></span>
+        <span id="lightboxMeta" class="lightbox-meta"></span>
+      </figcaption>
+    </figure>
+  </div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
