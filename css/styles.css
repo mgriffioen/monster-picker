@@ -124,7 +124,12 @@ a { color: var(--accent-2); }
   backdrop-filter: blur(8px);
 }
 .summon-bar .btn { width: 100%; }
+.summon-bar { transition: transform .25s ease, opacity .2s ease; }
+/* Tucked away while the in-stage Summon button is on screen, so the two are
+   never visible at once. */
+.summon-bar.is-tucked { transform: translateY(130%); opacity: 0; pointer-events: none; }
 @media (min-width: 901px) { .summon-bar { display: none; } }
+@media (prefers-reduced-motion: reduce) { .summon-bar { transition: none; } }
 
 /* Only shown on narrow screens (filters live below the stage there). */
 .filter-hint {

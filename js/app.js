@@ -46,7 +46,20 @@ async function init() {
   buildControls();
   bindEvents();
   refreshMatchCount();
+  setupSummonBarVisibility();
   idleStage();
+}
+
+// Hide the fixed mobile summon bar whenever the in-stage Summon button is
+// visible, so the screen never shows two Summon buttons at once.
+function setupSummonBarVisibility() {
+  const bar = el("summonBar");
+  const btn = el("summonBtn");
+  if (!bar || !btn || !("IntersectionObserver" in window)) return;
+  bar.classList.add("is-tucked"); // the inline button is visible on load
+  new IntersectionObserver(([entry]) => {
+    bar.classList.toggle("is-tucked", entry.isIntersecting);
+  }, { threshold: 0 }).observe(btn);
 }
 
 // --------------------------------------------------------------------------
