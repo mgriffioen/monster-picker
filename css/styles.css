@@ -130,7 +130,11 @@ a { color: var(--accent-2); }
 }
 
 /* ---------- controls ---------- */
-.controls { position: sticky; top: 1rem; }
+/* Sticky is desktop-only. Declaring it inside a min-width query keeps it from
+   overriding the mobile `position: static` rule via source order. */
+@media (min-width: 901px) {
+  .controls { position: sticky; top: 1rem; }
+}
 .field { margin-bottom: 1.15rem; }
 .field--row { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
 .field label, .field-label {
