@@ -108,7 +108,23 @@ a { color: var(--accent-2); }
   .filter-hint { display: block; }
   .result-head { flex-wrap: wrap; }
   .topbar { padding-bottom: .8rem; }
+  /* room so the fixed summon bar never hides the footer */
+  body { padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
 }
+
+/* Fixed, always-reachable summon bar. Visible by default and hidden on
+   desktop via the min-width query below, so it can never be overridden by
+   source order the way a base `display:none` + mobile override would. */
+.summon-bar {
+  display: block; position: fixed; z-index: 20; left: 0; right: 0; bottom: 0;
+  padding: .6rem .9rem calc(.6rem + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to top, rgba(5, 6, 13, .98), rgba(8, 10, 22, .82));
+  border-top: 1px solid var(--panel-edge);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, .45);
+  backdrop-filter: blur(8px);
+}
+.summon-bar .btn { width: 100%; }
+@media (min-width: 901px) { .summon-bar { display: none; } }
 
 /* Only shown on narrow screens (filters live below the stage there). */
 .filter-hint {

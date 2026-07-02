@@ -119,6 +119,11 @@ function bindEvents() {
 
   el("summonBtn").addEventListener("click", summon);
   el("resummonBtn").addEventListener("click", summon);
+  el("summonBarBtn").addEventListener("click", () => {
+    // Bring the summoning circle into view, then run the ritual.
+    el("stage").scrollIntoView({ behavior: "smooth", block: "start" });
+    summon();
+  });
   el("browseBtn").addEventListener("click", toggleBrowse);
   el("copyBtn").addEventListener("click", copyStatBlock);
   el("resetBtn").addEventListener("click", resetFilters);
@@ -173,6 +178,16 @@ function refreshMatchCount() {
   el("summonBtn").disabled = n === 0;
   el("browseBtn").disabled = n === 0;
   el("noMatch").hidden = n !== 0;
+  syncSummonBar(n);
+}
+
+// Keep the fixed mobile summon bar in step with matches / spinning state.
+function syncSummonBar(count = candidates().length) {
+  const btn = el("summonBarBtn");
+  if (!btn) return;
+  if (state.spinning) { btn.disabled = true; btn.textContent = "✦ Summoning…"; return; }
+  btn.disabled = count === 0;
+  btn.textContent = count === 0 ? "No matches — adjust filters" : `✦ Summon (${count})`;
 }
 
 // --------------------------------------------------------------------------
@@ -184,6 +199,7 @@ function summon() {
   if (!pool.length) return;
 
   state.spinning = true;
+  syncSummonBar();
   el("stage").classList.add("is-spinning");
   el("stage").classList.remove("is-idle", "is-revealed");
   el("resultPanel").hidden = true;
@@ -216,6 +232,7 @@ function summon() {
 function land(m) {
   state.current = m;
   state.spinning = false;
+  syncSummonBar();
   el("stage").classList.remove("is-spinning");
   el("stage").classList.add("is-revealed");
   el("portraitHost").innerHTML = monsterPortrait(m, { size: 300 });
