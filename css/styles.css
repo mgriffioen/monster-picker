@@ -97,7 +97,24 @@ a { color: var(--accent-2); }
   align-items: start;
   max-width: 1400px; margin: 0 auto;
 }
-@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  /* Lead with the summoning circle + Summon button; filters follow. */
+  .stage-wrap { order: -1; }
+  .controls { order: 1; position: static; top: auto; }
+  .summon-actions { width: 100%; }
+  .summon-actions .btn { flex: 1 1 40%; }
+  .summon-actions .btn--primary { flex-basis: 100%; }
+  .filter-hint { display: block; }
+  .result-head { flex-wrap: wrap; }
+  .topbar { padding-bottom: .8rem; }
+}
+
+/* Only shown on narrow screens (filters live below the stage there). */
+.filter-hint {
+  display: none; text-align: center; margin: 1.1rem 0 .2rem;
+  color: var(--ink-faint); font-size: .8rem; letter-spacing: .5px;
+}
 
 .panel {
   background: var(--panel);
@@ -337,8 +354,9 @@ input[type="range"]::-moz-range-thumb {
   clip-path: polygon(0 0, 100% 35%, 100% 65%, 0 100%); }
 .sb-line { margin: .12rem 0; color: #58180d; }
 .sb-label { font-weight: 700; color: #7a1f14; }
-.sb-abilities { display: flex; justify-content: space-between; text-align: center; gap: .3rem; flex-wrap: wrap; }
-.sb-ability { flex: 1 1 60px; }
+.sb-abilities { display: grid; grid-template-columns: repeat(6, 1fr); text-align: center; gap: .4rem .3rem; }
+@media (max-width: 900px) { .sb-abilities { grid-template-columns: repeat(3, 1fr); } }
+.sb-ability { min-width: 0; }
 .sb-ability-name { font-weight: 700; color: #7a1f14; font-size: .8rem; }
 .sb-ability-score span { color: #6a3a2a; }
 .sb-section-title {
