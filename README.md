@@ -24,6 +24,10 @@ it's SVG, it never pixelates.
 - **Summon animation**, **Re-summon**, and a **Browse matches** grid to pick by
   hand.
 - **Click-to-fullscreen** high-resolution portrait view.
+- **Print the stat block** — `🖨 Print card` sends the summoned monster to
+  [SpellMaster](https://spellmaster.mgriffioen.com/) to print on a Bluetooth
+  thermal printer. The whole stat block travels in the URL fragment, so nothing
+  is sent to a server and SpellMaster needs no copy of the monster.
 - **Optional real artwork**: an off-by-default toggle tries to fetch
   official-style art from a public API when the site is online, and silently
   falls back to the generated sigil if it isn't available.

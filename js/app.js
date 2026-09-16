@@ -143,6 +143,7 @@ function bindEvents() {
   });
   el("browseBtn").addEventListener("click", toggleBrowse);
   el("copyBtn").addEventListener("click", copyStatBlock);
+  el("printBtn").addEventListener("click", printStatBlock);
   el("resetBtn").addEventListener("click", resetFilters);
 
   el("portraitHost").addEventListener("click", () => {
@@ -382,6 +383,100 @@ function closeLightbox() {
 // --------------------------------------------------------------------------
 // Utilities
 // --------------------------------------------------------------------------
+// --------------------------------------------------------------------------
+// Send to SpellMaster
+//
+// SpellMaster (spellmaster.mgriffioen.com) prints cards on a Bluetooth thermal
+// printer. It takes a card as base64url JSON in the URL *fragment*, which is
+// never sent to a server. The shape mirrors how a stat block is laid out —
+// title, label/value rows, the six abilities, named sections — rather than any
+// particular data model. Contract: src/lib/cardLink.ts in that project.
+//
+// The whole stat block travels in the link, so there is no dependency on
+// SpellMaster holding the same monster. The largest in this set (Vampire) comes
+// to about 7.6 KB of URL, well inside what browsers accept.
+// --------------------------------------------------------------------------
+
+const SPELLMASTER_URL = "https://spellmaster.mgriffioen.com/";
+
+const ABILITY_ORDER = [
+  ["str", "STR"], ["dex", "DEX"], ["con", "CON"],
+  ["int", "INT"], ["wis", "WIS"], ["cha", "CHA"],
+];
+
+const DETAIL_ROWS = [
+  ["Saving Throws", "savingThrows"],
+  ["Skills", "skills"],
+  ["Vulnerabilities", "damageVulnerabilities"],
+  ["Resistances", "damageResistances"],
+  ["Damage Immunities", "damageImmunities"],
+  ["Condition Immunities", "conditionImmunities"],
+  ["Senses", "senses"],
+  ["Languages", "languages"],
+];
+
+const CARD_SECTIONS = [
+  ["Traits", "traits"],
+  ["Actions", "actions"],
+  ["Reactions", "reactions"],
+  ["Legendary Actions", "legendaryActions"],
+  ["Lair Actions", "lairActions"],
+];
+
+function abilityMod(score) {
+  const m = Math.floor((score - 10) / 2);
+  return m >= 0 ? `+${m}` : String(m);
+}
+
+function spellmasterCard(m) {
+  const rows = [
+    ["AC", String(m.ac)],
+    ["HP", m.hitDice ? `${m.hp} (${m.hitDice})` : String(m.hp)],
+    ["Speed", m.speed],
+  ];
+  for (const [label, key] of DETAIL_ROWS) {
+    if (m[key]) rows.push([label, m[key]]);
+  }
+  rows.push(["Challenge", `${m.crDisplay} (${m.xp.toLocaleString()} XP)`]);
+
+  const sections = [];
+  for (const [heading, key] of CARD_SECTIONS) {
+    const items = (m[key] || [])
+      .filter((entry) => entry && (entry.name || entry.desc))
+      .map((entry) => [entry.name || "", entry.desc || ""]);
+    if (items.length) sections.push({ h: heading, items });
+  }
+
+  return {
+    banner: `CR ${m.crDisplay}`,
+    title: m.name,
+    sub: `${m.size} ${m.type}${m.isSwarm ? " (swarm)" : ""}${m.alignment ? ", " + m.alignment : ""}`,
+    rows,
+    ab: ABILITY_ORDER.map(([key, label]) => [label, `${m.abilities[key]} (${abilityMod(m.abilities[key])})`]),
+    sections,
+    src: "SRD",
+  };
+}
+
+function toBase64Url(text) {
+  // Encode as UTF-8 first: btoa throws above U+00FF, and names contain dashes
+  // and accents.
+  const bytes = new TextEncoder().encode(text);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+export function spellmasterLink(m) {
+  return SPELLMASTER_URL + "#card=" + toBase64Url(JSON.stringify(spellmasterCard(m)));
+}
+
+function printStatBlock() {
+  if (!state.current) return;
+  // A named target reuses one tab rather than piling them up.
+  window.open(spellmasterLink(state.current), "spellmaster");
+}
+
 function copyStatBlock() {
   if (!state.current) return;
   navigator.clipboard.writeText(statBlockText(state.current)).then(() => {
