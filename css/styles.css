@@ -124,7 +124,12 @@ a { color: var(--accent-2); }
   backdrop-filter: blur(8px);
 }
 .summon-bar .btn { width: 100%; }
+.summon-bar { transition: transform .25s ease, opacity .2s ease; }
+/* Tucked away while the in-stage Summon button is on screen, so the two are
+   never visible at once. */
+.summon-bar.is-tucked { transform: translateY(130%); opacity: 0; pointer-events: none; }
 @media (min-width: 901px) { .summon-bar { display: none; } }
+@media (prefers-reduced-motion: reduce) { .summon-bar { transition: none; } }
 
 /* Only shown on narrow screens (filters live below the stage there). */
 .filter-hint {
@@ -169,6 +174,11 @@ select, input[type="search"] {
 }
 input[type="search"] { cursor: text; }
 input[type="search"]::placeholder { color: var(--ink-faint); }
+/* iOS Safari auto-zooms when a focused field's font is < 16px. Keep form
+   controls at 16px on small screens so tapping them never zooms the page. */
+@media (max-width: 900px) {
+  select, input[type="search"] { font-size: 16px; }
+}
 
 /* ---------- monster search ---------- */
 .panel-title--sub { margin-top: 1.4rem; }
